@@ -2,10 +2,99 @@ const express = require("express");
 const app = express();
 const bodyparser = require("body-parser");
 const cors = require("cors");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.json());
 app.use(cors());
 const port = 5001;
+
+app.get("/prisma", async (req, res) => {
+  const a = await prisma.user.findMany();
+  res.json(a);
+});
+
+app.post("/prisma", async (req, res) => {
+  const request = req.body;
+  const alreadyData = await prisma.user.findUnique({
+    where: { name: request.name, email: request.email },
+  });
+  if (alreadyData) {
+    res.status(400).json("please use another email");
+  } else {
+    try {
+      const daataa = await prisma.user.create({
+        data: { name: request.name, email: request.email },
+      });
+
+      res.json(daataa);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("internal error");
+    }
+  }
+});
+
+// Delete a user
+app.delete("/prisma/:id", async (req, res) => {
+  const userId = parseInt(req.params.id);
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json("User not found.");
+    }
+
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    res.json("User deleted successfully.");
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+// Check if a user exists by ID
+app.get("/prisma/:id", async (req, res) => {
+  const userId = parseInt(req.params.id);
+
+  // try {
+  //   const user = await prisma.user.findUniqueOrThrow({
+  //     where: { id: userId },
+  //   });
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (user) {
+      res.json({ exists: true, user });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+//edit
+app.put("/prisma/:id", async (req, res) => {
+  const userId = parseInt(req.params.id);
+
+  const newdata = req.body;
+  try {
+    const updateuser = await prisma.user.update({
+      where: { id: userId },
+      data: newdata,
+    });
+    res.status(200).json(updateuser);
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 const myData = {
   name: "Milan",
@@ -185,6 +274,426 @@ const supportDyn = [
 app.get("/about/sup/:name", (req, res) => {
   const i = req.params.name;
   res.send(supportDyn[i - 1]);
+});
+
+//react-hook-form
+app.post("/msg/reactHook", (req, res) => {
+  const emailValidate = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const form = req.body;
+  console.log(form);
+  if (
+    req.body.fullName &&
+    req.body.address &&
+    req.body.year &&
+    req.body.gender &&
+    req.body.email &&
+    req.body.phone &&
+    req.body.course &&
+    req.body.feed &&
+    req.body.date
+  ) {
+    if (emailValidate.test(req.body.email)) {
+      res.send(form);
+    } else res.status(422).send("enter correct email");
+  } else res.status(401).send("fill all field!!");
+});
+
+//loader data or dataTable
+const table = [
+  {
+    name: "John",
+    age: 30,
+    contact: "john@example.com",
+    address: "123 Main St",
+  },
+  { name: "Jane", age: 25, contact: "jane@example.com", address: "456 Elm St" },
+  { name: "Bob", age: 35, contact: "bob@example.com", address: "789 Oak St" },
+  {
+    name: "Alice",
+    age: 28,
+    contact: "alice@example.com",
+    address: "321 Pine St",
+  },
+  {
+    name: "Charlie",
+    age: 32,
+    contact: "charlie@example.com",
+    address: "654 Birch St",
+  },
+  { name: "Eve", age: 40, contact: "eve@example.com", address: "987 Cedar St" },
+  {
+    name: "Grace",
+    age: 22,
+    contact: "grace@example.com",
+    address: "135 Walnut St",
+  },
+  {
+    name: "Hank",
+    age: 45,
+    contact: "hank@example.com",
+    address: "246 Maple St",
+  },
+  {
+    name: "Ivy",
+    age: 27,
+    contact: "ivy@example.com",
+    address: "579 Cherry St",
+  },
+  {
+    name: "Kate",
+    age: 33,
+    contact: "kate@example.com",
+    address: "864 Sycamore St",
+  },
+  { name: "Mike", age: 29, contact: "mike@example.com", address: "975 Ash St" },
+  {
+    name: "Nancy",
+    age: 37,
+    contact: "nancy@example.com",
+    address: "468 Poplar St",
+  },
+  {
+    name: "Oscar",
+    age: 31,
+    contact: "oscar@example.com",
+    address: "753 Cedar St",
+  },
+  { name: "Pam", age: 26, contact: "pam@example.com", address: "642 Elm St" },
+  {
+    name: "Quinn",
+    age: 34,
+    contact: "quinn@example.com",
+    address: "519 Oak St",
+  },
+];
+
+app.get("/msg/dataTable", (req, res) => {
+  res.send(table);
+});
+
+//tailwind dataTable
+const dataOfTable = [
+  {
+    name: "John Doe",
+    age: 30,
+    contact: "john@example.com",
+    address: "123 Main St",
+    action: "View Details",
+  },
+  {
+    name: "Jane Smith",
+    age: 25,
+    contact: "jane@example.com",
+    address: "456 Elm St",
+    action: "View Details",
+  },
+  {
+    name: "Bob Johnson",
+    age: 35,
+    contact: "bob@example.com",
+    address: "789 Oak St",
+    action: "View Details",
+  },
+  {
+    name: "Alice Williams",
+    age: 28,
+    contact: "alice@example.com",
+    address: "321 Pine St",
+    action: "View Details",
+  },
+  {
+    name: "Eve Brown",
+    age: 22,
+    contact: "eve@example.com",
+    address: "654 Birch St",
+    action: "View Details",
+  },
+  {
+    name: "Charlie Davis",
+    age: 40,
+    contact: "charlie@example.com",
+    address: "987 Cedar St",
+    action: "View Details",
+  },
+  {
+    name: "David Wilson",
+    age: 33,
+    contact: "david@example.com",
+    address: "741 Maple St",
+    action: "View Details",
+  },
+  {
+    name: "Grace Miller",
+    age: 29,
+    contact: "grace@example.com",
+    address: "852 Spruce St",
+    action: "View Details",
+  },
+  {
+    name: "Fiona Moore",
+    age: 26,
+    contact: "fiona@example.com",
+    address: "963 Ash St",
+    action: "View Details",
+  },
+  {
+    name: "Hank Taylor",
+    age: 31,
+    contact: "hank@example.com",
+    address: "159 Walnut St",
+    action: "View Details",
+  },
+  {
+    name: "Ivy Clark",
+    age: 27,
+    contact: "ivy@example.com",
+    address: "357 Oakwood St",
+    action: "View Details",
+  },
+  {
+    name: "Kevin Adams",
+    age: 34,
+    contact: "kevin@example.com",
+    address: "258 Elmwood St",
+    action: "View Details",
+  },
+  {
+    name: "Lily Parker",
+    age: 32,
+    contact: "lily@example.com",
+    address: "654 Oakdale St",
+    action: "View Details",
+  },
+  {
+    name: "Mike Wright",
+    age: 38,
+    contact: "mike@example.com",
+    address: "951 Maplewood St",
+    action: "View Details",
+  },
+  {
+    name: "Nina Lewis",
+    age: 24,
+    contact: "nina@example.com",
+    address: "753 Cedarwood St",
+    action: "View Details",
+  },
+  {
+    name: "Oliver Hill",
+    age: 37,
+    contact: "oliver@example.com",
+    address: "357 Pinecone St",
+    action: "View Details",
+  },
+  {
+    name: "Penny Scott",
+    age: 23,
+    contact: "penny@example.com",
+    address: "852 Birchtree St",
+    action: "View Details",
+  },
+  {
+    name: "Quincy King",
+    age: 36,
+    contact: "quincy@example.com",
+    address: "159 Oakhill St",
+    action: "View Details",
+  },
+  {
+    name: "Rachel Green",
+    age: 39,
+    contact: "rachel@example.com",
+    address: "753 Maplehill St",
+    action: "View Details",
+  },
+  {
+    name: "Sam Baker",
+    age: 21,
+    contact: "sam@example.com",
+    address: "357 Sprucehill St",
+    action: "View Details",
+  },
+];
+
+app.get("/msg/tailwindData", (req, res) => {
+  res.send(dataOfTable);
+});
+
+//material data table
+const dataOfMaterial = [
+  {
+    name: {
+      firstName: "John",
+      lastName: "Doe",
+    },
+    address: "261 Erdman Ford",
+    city: "East Daphne",
+    state: "Kentucky",
+    action: "Edit",
+  },
+  {
+    name: {
+      firstName: "Jane",
+      lastName: "Doe",
+    },
+    address: "769 Dominic Grove",
+    city: "Columbus",
+    state: "Ohio",
+    action: "Delete",
+  },
+  {
+    name: {
+      firstName: "Joe",
+      lastName: "Doe",
+    },
+    address: "566 Brakus Inlet",
+    city: "South Linda",
+    state: "West Virginia",
+    action: "View Details",
+  },
+  {
+    name: {
+      firstName: "Kevin",
+      lastName: "Vandy",
+    },
+    address: "722 Emie Stream",
+    city: "Lincoln",
+    state: "Nebraska",
+    action: "Edit",
+  },
+  {
+    name: {
+      firstName: "Joshua",
+      lastName: "Rolluffs",
+    },
+    address: "32188 Larkin Turnpike",
+    city: "Charleston",
+    state: "South Carolina",
+    action: "Delete",
+  },
+  {
+    name: {
+      firstName: "Alice",
+      lastName: "Smith",
+    },
+    address: "123 Main St",
+    city: "Springfield",
+    state: "Illinois",
+    action: "View Details",
+  },
+  {
+    name: {
+      firstName: "Bob",
+      lastName: "Johnson",
+    },
+    address: "456 Elm St",
+    city: "Riverside",
+    state: "California",
+    action: "Edit",
+  },
+  {
+    name: {
+      firstName: "Charlie",
+      lastName: "Brown",
+    },
+    address: "789 Oak St",
+    city: "Oakland",
+    state: "California",
+    action: "Delete",
+  },
+  {
+    name: {
+      firstName: "Daisy",
+      lastName: "Johnson",
+    },
+    address: "101 Pine St",
+    city: "Portland",
+    state: "Oregon",
+    action: "View Details",
+  },
+  {
+    name: {
+      firstName: "Ella",
+      lastName: "Smith",
+    },
+    address: "202 Maple St",
+    city: "Seattle",
+    state: "Washington",
+    action: "Edit",
+  },
+  {
+    name: {
+      firstName: "John",
+
+      lastName: "Doe",
+    },
+
+    address: "261 Erdman Ford",
+
+    city: "East Daphne",
+
+    state: "Kentucky",
+  },
+
+  {
+    name: {
+      firstName: "Jane",
+
+      lastName: "Doe",
+    },
+
+    address: "769 Dominic Grove",
+
+    city: "Columbus",
+
+    state: "Ohio",
+  },
+
+  {
+    name: {
+      firstName: "Joe",
+
+      lastName: "Doe",
+    },
+
+    address: "566 Brakus Inlet",
+
+    city: "South Linda",
+
+    state: "West Virginia",
+  },
+
+  {
+    name: {
+      firstName: "Kevin",
+
+      lastName: "Vandy",
+    },
+
+    address: "722 Emie Stream",
+
+    city: "Lincoln",
+
+    state: "Nebraska",
+  },
+
+  {
+    name: {
+      firstName: "Joshua",
+
+      lastName: "Rolluffs",
+    },
+
+    address: "32188 Larkin Turnpike",
+
+    city: "Charleston",
+
+    state: "South Carolina",
+  },
+];
+
+app.get("/msg/materialDataTable", (req, res) => {
+  res.send(dataOfMaterial);
 });
 
 app.listen(port, () => {
