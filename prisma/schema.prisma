@@ -12,3 +12,10 @@ model User {
     email String  @unique
     name  String?
 }
+
+model register {
+    id       Int    @id @default(autoincrement())
+    email    String @unique
+    name     String
+    password String
+}

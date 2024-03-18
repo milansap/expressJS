@@ -9,6 +9,48 @@ app.use(bodyparser.json());
 app.use(cors());
 const port = 5001;
 
+//register get
+
+app.get("/register", async (req, res) => {
+  const reg = await prisma.register.findMany();
+  console.log(reg);
+  res.json(reg);
+});
+
+app.post("/register", async (req, res) => {
+  const request = req.body;
+
+  const already = await prisma.register.findUnique({
+    where: {
+      name: request.name,
+      email: request.email,
+      password: request.password,
+    },
+  });
+
+  if (already) {
+    res.status(400).json("please use another email");
+  } else {
+    try {
+      const daataa = await prisma.register.create({
+        data: {
+          name: request.name,
+          email: request.email,
+          password: request.password,
+        },
+      });
+      console.log(daataa);
+      res.json(daataa);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("internal error");
+    }
+  }
+});
+
+//login page
+
+//dataTable
 app.get("/prisma", async (req, res) => {
   const a = await prisma.user.findMany();
   res.json(a);
@@ -54,7 +96,7 @@ app.delete("/prisma/:id", async (req, res) => {
 
     res.json("User deleted successfully.");
   } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ error: error });
   }
 });
 // Check if a user exists by ID
