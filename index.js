@@ -2,141 +2,17 @@ const express = require("express");
 const app = express();
 const bodyparser = require("body-parser");
 const cors = require("cors");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+
 app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.json());
 app.use(cors());
 const port = 5001;
+app.use(cors());
+
+const authRoute = require("./routes/Auth");
+app.use("", authRoute);
 
 //register get
-
-app.get("/register", async (req, res) => {
-  const reg = await prisma.register.findMany();
-  console.log(reg);
-  res.json(reg);
-});
-
-app.post("/register", async (req, res) => {
-  const request = req.body;
-
-  const already = await prisma.register.findUnique({
-    where: {
-      name: request.name,
-      email: request.email,
-      password: request.password,
-    },
-  });
-
-  if (already) {
-    res.status(400).json("please use another email");
-  } else {
-    try {
-      const daataa = await prisma.register.create({
-        data: {
-          name: request.name,
-          email: request.email,
-          password: request.password,
-        },
-      });
-      console.log(daataa);
-      res.json(daataa);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send("internal error");
-    }
-  }
-});
-
-//login page
-
-//dataTable
-app.get("/prisma", async (req, res) => {
-  const a = await prisma.user.findMany();
-  res.json(a);
-});
-
-app.post("/prisma", async (req, res) => {
-  const request = req.body;
-  const alreadyData = await prisma.user.findUnique({
-    where: { name: request.name, email: request.email },
-  });
-  if (alreadyData) {
-    res.status(400).json("please use another email");
-  } else {
-    try {
-      const daataa = await prisma.user.create({
-        data: { name: request.name, email: request.email },
-      });
-
-      res.json(daataa);
-    } catch (error) {
-      console.log(error);
-      res.status(500).send("internal error");
-    }
-  }
-});
-
-// Delete a user
-app.delete("/prisma/:id", async (req, res) => {
-  const userId = parseInt(req.params.id);
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      return res.status(404).json("User not found.");
-    }
-
-    await prisma.user.delete({
-      where: { id: userId },
-    });
-
-    res.json("User deleted successfully.");
-  } catch (error) {
-    res.status(500).json({ error: error });
-  }
-});
-// Check if a user exists by ID
-app.get("/prisma/:id", async (req, res) => {
-  const userId = parseInt(req.params.id);
-
-  // try {
-  //   const user = await prisma.user.findUniqueOrThrow({
-  //     where: { id: userId },
-  //   });
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (user) {
-      res.json({ exists: true, user });
-    } else {
-      res.json({ exists: false });
-    }
-  } catch (error) {
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-//edit
-app.put("/prisma/:id", async (req, res) => {
-  const userId = parseInt(req.params.id);
-
-  const newdata = req.body;
-  try {
-    const updateuser = await prisma.user.update({
-      where: { id: userId },
-      data: newdata,
-    });
-    res.status(200).json(updateuser);
-  } catch (err) {
-    console.log(err);
-  }
-});
 
 const myData = {
   name: "Milan",
@@ -739,5 +615,5 @@ app.get("/msg/materialDataTable", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`listening to port $(port)`);
+  console.log(`listening to port ${port}`);
 });
