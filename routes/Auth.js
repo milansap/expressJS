@@ -35,7 +35,7 @@ router.post("/register", async (req, res) => {
           password: Enpassword,
         },
       });
-      console.log(daataa);
+      console.log(resDaataa);
 
       res.json(resDaataa);
     } catch (error) {
